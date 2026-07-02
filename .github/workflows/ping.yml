@@ -1,0 +1,23 @@
+name: ping
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Ping taro-lab (keep Render awake)
+        run: |
+          code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 90 https://taro-lab.onrender.com/index.html || echo 000)
+          echo "ping status=$code"
+          # Cold-start wake-up can be slow; retry once so the run reflects reality
+          if [ "$code" != "200" ]; then
+            sleep 20
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 90 https://taro-lab.onrender.com/index.html || echo 000)
+            echo "retry status=$code"
+          fi
